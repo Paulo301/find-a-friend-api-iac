@@ -75,6 +75,59 @@ resource "aws_iam_role_policy" "ecr-role-policy" {
   depends_on = [aws_iam_role.ecr-role]
 }
 
+resource "aws_iam_role" "tf-role" {
+  name = "tf-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect : "Allow",
+        Action : "sts:AssumeRoleWithWebIdentity",
+        Principal : {
+          Federated : "arc"
+        },
+        Condition : {
+          StringEquals : {
+            "token:aud" = [""],
+            "token:sub" = [""]
+          }
+        }
+      },
+    ]
+  })
+
+  tags = {
+    IAC = true
+  }
+}
+
+data "aws_iam_policy_document" "tf-policy" {
+  statement {
+    effect    = "Allow"
+    actions   = ["ecr:*"]
+    resources = ["*"]
+  }
+  statement {
+    effect    = "Allow"
+    actions   = ["iam:*"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "tf-policy" {
+  name   = "tf-policy"
+  policy = data.aws_iam_policy_document.tf-policy.json
+}
+
+
+resource "aws_iam_role_policy_attachment" "tf-policy-attachment" {
+  role       = aws_iam_role.tf-role
+  policy_arn = aws_iam_policy.tf-policy.arn
+
+  depends_on = [aws_iam_role.tf-role]
+}
+
 resource "aws_iam_role" "app-runner-role" {
   name = "app-runner-role"
 

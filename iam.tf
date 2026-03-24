@@ -113,6 +113,11 @@ data "aws_iam_policy_document" "tf-policy" {
     actions   = ["iam:*"]
     resources = ["*"]
   }
+  statement {
+    effect    = "Allow"
+    actions   = ["s3:*"]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_policy" "tf-policy" {
